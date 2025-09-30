@@ -1,29 +1,16 @@
+import os
+import altair as alt
 import streamlit as st
 import torch
 import torch.nn as nn
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
 
-# This relates to plotting datetime values with matplotlib:
-from pandas.plotting import register_matplotlib_converters
 from sklearn.preprocessing import MinMaxScaler
-register_matplotlib_converters()
 
-import altair as alt
-
-# load a sample dataset as a pandas DataFrame
-#from vega_datasets import data
-#cars = data.cars()
-
-# make the chart
-#bars = alt.Chart(cars).mark_point().encode(
-#    x='Horsepower',
-#    y='Miles_per_Gallon',
-#    color='Origin',
-#).interactive()
-
-#st.altair_chart(bars, theme='streamlit', use_container_width=True)
+fname = 'stat2_data.csv'
+if os.path.exists(fname) == False:
+    st.write("Отсутствует исходный файл для прогнозирования. Перейдите на вкладку Explore")
 
 # Define section
 data_sec = st.container()
@@ -79,12 +66,6 @@ with data_sec:
 
     # Apply the input_data function to train_norm
     train_data = input_data(train_norm,window_size)
-    len(train_data)  # this should equal 325-12-12
-
-    #train_data[:2]
-
-    # We will be using an LSTM layer of size (1, 1000).
-
 
     class KTGPredictor(nn.Module):
 
@@ -108,10 +89,7 @@ with data_sec:
     criterion = nn.MSELoss()
     optimizer = torch.optim.Adam(predictorModel.parameters(), lr=0.001)
 
-    print(predictorModel)
-
-
-    # ## Обучение модели
+    ## Обучение модели
 
     epochs = 50
 
@@ -157,15 +135,10 @@ with data_sec:
                         torch.zeros(1,1,predictorModel.hidden_size))
             preds.append(predictorModel(seq).item())
 
-    #preds[window_size:]  
-
-
     true_prediction = scaler.inverse_transform(np.array(preds[window_size:]).reshape(1, -1))
     true_prediction = true_prediction.squeeze()
 
-    #df['value'][-12:]
-    #x = np.arange(100)
-    #numb_12 = numb_lins-test_size
+
     x = np.arange(numb_lins)
     #print(x)
 
@@ -183,11 +156,15 @@ with data_sec:
     source = pd.DataFrame({
     'x': x,
     'f(x)': true_prediction
-    })
+    }).properties(
+        title='График исходных данных'
+    )
 
     pred = alt.Chart(source).mark_line().encode(
         x='x',
         y='f(x)'
+    ).properties(
+        title='График прогноза'
     )
     
     st.altair_chart(tser)
