@@ -150,15 +150,15 @@ with data_sec:
     tser = alt.Chart(source).mark_line().encode(
         x='x',
         y='f(x)'
+    ).properties(
+        title='График исходных данных'
     )
     
     x = np.arange(12)
     source = pd.DataFrame({
     'x': x,
     'f(x)': true_prediction
-    }).properties(
-        title='График исходных данных'
-    )
+    })
 
     pred = alt.Chart(source).mark_line().encode(
         x='x',
