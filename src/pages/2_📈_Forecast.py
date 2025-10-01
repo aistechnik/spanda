@@ -11,23 +11,27 @@ from sklearn.preprocessing import MinMaxScaler
 fname = 'stat2_data.csv'
 if os.path.exists(fname) == False:
     st.write("Отсутствует исходный файл для прогнозирования. Перейдите на вкладку Explore")
+    exit(1)
+
+# Define section
+data_sec = st.container()
+
+with data_sec:
+    finp = open('type_data.txt', 'r')
+    typed = finp.readline().strip()
 
 # Define section
 data_sec = st.container()
 
 with data_sec:
     ## Загрузка данных
-    df = pd.read_csv('stat2_data.csv',index_col=0)
+    df = pd.read_csv(fname, index_col=0)
 
-    # 
+    df.dropna(inplace=True)
     numb_lins = len(df)
     print(numb_lins)
 
-    # EDA:
-    df.dropna(inplace=True)
-    #len(df)
-
-    # Извлечение даннах из входново файла .csv file
+    # Извлечение даннах из входного файла .csv file
     y = df['value'].values.astype(float)
 
     # Определение размера тестового набора данных
@@ -37,16 +41,11 @@ with data_sec:
     train_set = y[:-test_size]
     test_set = y[-test_size:]
 
-    #print(f"shape of train_set : {train_set.shape}")
-    #print(f"shape of test_set : {test_set.shape}")
-
     # Создание экземпляр масштабатора с диапазоном от -1 до 1
     scaler = MinMaxScaler(feature_range=(-1, 1))
 
     # Normalize the training set
     train_norm = scaler.fit_transform(train_set.reshape(-1, 1))
-
-    #train_norm[:10]
 
     # Convert train_norm from an array to a tensor
     train_norm = torch.FloatTensor(train_norm).view(-1)
@@ -90,7 +89,6 @@ with data_sec:
     optimizer = torch.optim.Adam(predictorModel.parameters(), lr=0.001)
 
     ## Обучение модели
-
     epochs = 50
 
     import time
@@ -119,7 +117,6 @@ with data_sec:
 
 
     # ## Model's inference
-
     future = 12
 
     # Add the last window of training values to the list of predictions
@@ -140,32 +137,32 @@ with data_sec:
 
 
     x = np.arange(numb_lins)
-    #print(x)
-
     source = pd.DataFrame({
-    'x': x,
-    'f(x)': df['value']
+        'time': x,
+        typed: df['value']
     })
 
     tser = alt.Chart(source).mark_line().encode(
-        x='x',
-        y='f(x)'
+        x='time',
+        y=typed
     ).properties(
-        title='График исходных данных'
+        title='График входных данных '+ typed
     )
-    
+
     x = np.arange(12)
     source = pd.DataFrame({
-    'x': x,
-    'f(x)': true_prediction
+        'time': x,
+        typed: true_prediction
     })
 
     pred = alt.Chart(source).mark_line().encode(
-        x='x',
-        y='f(x)'
+        x='time',
+        y=typed
     ).properties(
-        title='График прогноза'
+        title='График прогноза ' + typed
     )
-    
+
     st.altair_chart(tser)
     st.altair_chart(pred)
+
+    finp.close()
